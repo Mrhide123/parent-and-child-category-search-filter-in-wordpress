@@ -1,0 +1,122 @@
+// in JavaScript, object properties are accessed as ajax_object.ajax_url, ajax_object.we_value
+wp_localize_script( 'ajax-script', 'ajax_object',
+        array( 'ajax_url' => admin_url( 'admin-ajax.php' ), 'we_value' => 1234 ) );
+}
+function widget_css_classes_loader() {
+
+	$languages_path = plugin_basename( dirname( __FILE__ ) . '/languages' );
+	load_plugin_textdomain( 'widget-css-classes', false, $languages_path );
+
+	// Load plugin settings
+	include_once 'includes/widget-css-classes-library.class.php';
+	WCSSC_Lib::set_settings( get_option( WCSSC_Lib::$settings_key ) );
+
+	if ( is_admin() ) {
+
+		if ( ! defined( 'WCSSC_PLUGIN_VERSION' ) ) define( 'WCSSC_PLUGIN_VERSION', '1.5.4' );
+		if ( ! defined( 'WCSSC_FILE' ) ) define( 'WCSSC_FILE', __FILE__ );
+		if ( ! defined( 'WCSSC_BASENAME' ) ) define( 'WCSSC_BASENAME', plugin_basename( __FILE__ ) );
+		if ( ! defined( 'WCSSC_PLUGIN_DIR' ) ) define( 'WCSSC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+		if ( ! defined( 'WCSSC_PLUGIN_URL' ) ) define( 'WCSSC_PLUGIN_URL', plugins_url( '', __FILE__ ) );
+
+		include_once 'includes/widget-css-classes-loader.class.php';
+		WCSSC_Loader::init();
+
+	}
+}
+function widget_css_classes_frontend_hook() {
+	if ( ! is_admin() ) {
+		include_once 'includes/widget-css-classes.class.php';
+		WCSSC::init_front();
+		add_filter( 'dynamic_sidebar_params', array( 'WCSSC', 'add_widget_classes' ) );
+	}
+}
+/*this is only depending code of ajax file if you have allready add ajax your theme then remove this code */
+////
+
+/*this is main code*/
+
+if ( ! class_exists( 'frontendAjaxDropdown' ) ):
+
+    class frontendAjaxDropdown
+    {
+        
+        function __construct()
+        {
+            
+            add_shortcode( 'ajax-dropdown', array($this, 'init_shortocde') );
+
+            add_action( 'wp_ajax_get_subcat', array($this, 'getSubCat') );
+
+          
+            add_action('wp_ajax_nopriv_get_subcat', array($this, 'getSubCat') );
+        }
+
+      
+        function init_shortocde()
+        {
+            wp_dropdown_categories(
+                'name=main_cat&selected=-1&hierarchical=1&depth=1&hide_empty=0&show_option_none=All Categories'
+            );
+
+            ?>
+            <script>
+                (function($){
+                    $("#main_cat").change(function(){
+                        $("#sub_cat").empty();
+                    	$.ajax({
+                    		type: "post",
+                            url: "<?php echo admin_url( 'admin-ajax.php' ); ?>",
+                            data: { action: 'get_subcat', cat_id: $("#main_cat option:selected").val() },
+                    		beforeSend: function() {$("#loading").fadeIn('slow');},
+                    		success: function(data) {
+                                $("#loading").fadeOut('slow');
+                                $("#sub_cat").append(data);
+                    		}
+                    	});
+                    });
+                })(jQuery);
+            </script>
+
+            <div id="loading" style="display: none;">Loading...</div>
+            <div id="sub_cat">
+            <?php
+        }
+      
+            function getSubCat()
+            {
+                if (isset($_POST['cat_id'])) {
+
+                    $cat =$_POST['cat_id'];
+        ?>
+     
+       
+     <form role="search" method="get"  action="<?php bloginfo('siteurl'); ?>">
+      <div>
+     <?php
+               
+		$swp_cat_dropdown_args = array(
+            'parent' => $cat ,
+            'hide_empty'=>0,
+			);
+		wp_dropdown_categories( $swp_cat_dropdown_args );
+
+          }
+          
+	  ?>
+      in
+      <label class="screen-reader-text" for="s">Search for:</label>
+      <input type="text" value="" name="s" id="s" />
+      <input type="submit" id="searchsubmit" value="Search" />
+      </div>
+     </form>
+     </div>
+      
+    <?php
+         die();
+        }
+    }
+ 
+endif;
+
+new frontendAjaxDropdown();
