@@ -1,40 +1,20 @@
-// in JavaScript, object properties are accessed as ajax_object.ajax_url, ajax_object.we_value
-wp_localize_script( 'ajax-script', 'ajax_object',
-        array( 'ajax_url' => admin_url( 'admin-ajax.php' ), 'we_value' => 1234 ) );
-}
-function widget_css_classes_loader() {
+<?php
+/*
+Plugin Name: Jugad Category Filter Dropdown
+Plugin URI: #
+Description: Load sub-category dropdown based on parent category by ajax call
+Version: 0.1
+Author:Govind 
+Author URI: #
+*/
+?>
 
-	$languages_path = plugin_basename( dirname( __FILE__ ) . '/languages' );
-	load_plugin_textdomain( 'widget-css-classes', false, $languages_path );
 
-	// Load plugin settings
-	include_once 'includes/widget-css-classes-library.class.php';
-	WCSSC_Lib::set_settings( get_option( WCSSC_Lib::$settings_key ) );
-
-	if ( is_admin() ) {
-
-		if ( ! defined( 'WCSSC_PLUGIN_VERSION' ) ) define( 'WCSSC_PLUGIN_VERSION', '1.5.4' );
-		if ( ! defined( 'WCSSC_FILE' ) ) define( 'WCSSC_FILE', __FILE__ );
-		if ( ! defined( 'WCSSC_BASENAME' ) ) define( 'WCSSC_BASENAME', plugin_basename( __FILE__ ) );
-		if ( ! defined( 'WCSSC_PLUGIN_DIR' ) ) define( 'WCSSC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-		if ( ! defined( 'WCSSC_PLUGIN_URL' ) ) define( 'WCSSC_PLUGIN_URL', plugins_url( '', __FILE__ ) );
-
-		include_once 'includes/widget-css-classes-loader.class.php';
-		WCSSC_Loader::init();
-
-	}
-}
-function widget_css_classes_frontend_hook() {
-	if ( ! is_admin() ) {
-		include_once 'includes/widget-css-classes.class.php';
-		WCSSC::init_front();
-		add_filter( 'dynamic_sidebar_params', array( 'WCSSC', 'add_widget_classes' ) );
-	}
-}
-/*this is only depending code of ajax file if you have allready add ajax your theme then remove this code */
-////
-
-/*this is main code*/
+<?php
+function theme_scripts() {
+    wp_enqueue_script('jquery');
+  }
+  add_action('wp_enqueue_scripts', 'theme_scripts');
 
 if ( ! class_exists( 'frontendAjaxDropdown' ) ):
 
@@ -48,7 +28,7 @@ if ( ! class_exists( 'frontendAjaxDropdown' ) ):
 
             add_action( 'wp_ajax_get_subcat', array($this, 'getSubCat') );
 
-          
+            add_action('wp_ajax_get_subcat', array($this, 'getSubCat') );
             add_action('wp_ajax_nopriv_get_subcat', array($this, 'getSubCat') );
         }
 
